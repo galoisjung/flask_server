@@ -1,6 +1,10 @@
+import psycopg2
 from flask import request, jsonify, Blueprint
+from sqlalchemy.exc import IntegrityError
 
+from flask import session
 from team_bc.models.Infomation import Information
+from psycopg2.errors import UniqueViolation
 
 # from models import Phishing
 
@@ -39,33 +43,52 @@ from team_bc.models.Infomation import Information
 bp = Blueprint('api', __name__, url_prefix='/api/phishing/')
 
 
-@bp.route('/register', methods=['GET', 'POST'])
+@bp.route('/login', methods=['POST'])
+def userLogin():
+    data = request.get_json()
+    user_id = data['id'].strip()
+    password = data['pw'].strip()
+
+    info = Information.query.get(user_id)
+    if user_id != "" and password == info.password:
+        session.clear()
+        session['user_id'] = user_id
+
+        return jsonify({"session_key": user_id})
+    else:
+        responce = jsonify({"error": "error"})
+        responce.status_code =401
+        return responce
+
+
+@bp.route('/register', methods=['POST'])
 def register():
-    if request.method == 'POST':
-        if request.is_json:
-            # --------------------------------- data 들어오는 것인지 or id, pw, email 하나하나 만들어 주어야 하는 것인지
-            data = request.get_json()
+    # --------------------------------- data 들어오는 것인지 or id, pw, email 하나하나 만들어 주어야 하는 것인지
+    data = request.get_json()
 
-            id = data['id']
-            password = data['pw']
-            email = data['email']
-            name = data['name']
-            # -------------------------------------------- (1) response (원래 만들었던 server.py 참고하여 작성...?) -> (2) UI 작성
-            # ---------------------------------- DataBase 와 연결
-            info = Information(id=id, password=password, email=email, name=name)
-            from team_bc import db
-            db.session.add(info)
-            db.session.commit()
+    id = data['id'].strip()
+    password = data['pw'].strip()
+    email = data['email'].strip()
+    name = data['name'].strip()
+    # -------------------------------------------- (1) response (원래 만들었던 server.py 참고하여 작성...?) -> (2) UI 작성
+    # ---------------------------------- DataBase 와 연결
+    try:
+        info = Information(id=id, password=password, email=email, name=name)
+        from team_bc import db
+        db.session.add(info)
+        db.session.commit()
+        response = jsonify({
+            "status": "success"
+        })
+    except IntegrityError as e:
+        response = jsonify({
+            "error": "Bad_Request",
+            "detail": e.orig.diag.message_detail,
+            "code": 1
+        })
+        response.status_code = 400
 
-            response = jsonify({
-                "test": "test"
-            })
-        else:
-            response = jsonify({
-                "test", "test"
-            })
-            response.status_code = 201
-        return response
+    return response
 
 
 # ----------------------------------------- route -> post (login)
