@@ -13,14 +13,10 @@ def create_app():
     app = Flask(__name__)
     # database 정보
     app.config.from_object(config)
-
-
     db.init_app(app)
     migrate.init_app(app, db)
     CORS(app)
 
-    from team_bc.views import server
-    app.register_blueprint(server.bp)
     from team_bc.views import api
     app.register_blueprint(api.bp)
 

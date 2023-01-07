@@ -1,5 +1,5 @@
 import psycopg2
-from flask import request, jsonify, Blueprint
+from flask import request, jsonify, Blueprint, g
 from sqlalchemy.exc import IntegrityError
 
 from flask import session
@@ -42,7 +42,6 @@ from psycopg2.errors import UniqueViolation
 # 1. register -> post, login -> post
 bp = Blueprint('api', __name__, url_prefix='/api/phishing/')
 
-
 @bp.route('/login', methods=['POST'])
 def userLogin():
     data = request.get_json()
@@ -50,14 +49,18 @@ def userLogin():
     password = data['pw'].strip()
 
     info = Information.query.get(user_id)
-    if user_id != "" and password == info.password:
-        session.clear()
-        session['user_id'] = user_id
-
-        return jsonify({"session_key": user_id})
+    if user_id != "" and password != "":
+        if info and info.password == password:
+            session[user_id] = user_id
+            print(session)
+            return jsonify({"session_key": user_id})
+        else:
+            responce = jsonify({"error": "error"})
+            responce.status_code = 401
+            return responce
     else:
-        responce = jsonify({"error": "error"})
-        responce.status_code =401
+        responce = jsonify()
+        responce.status_code = 400
         return responce
 
 
@@ -116,4 +119,22 @@ def get_counts():
         'count': count
     })
     response.status_code = 200
+    return response
+
+
+@bp.route('/check', methods=['POST'])
+def check():
+    data = request.get_json()
+    user_id = data['user_id']
+    try:
+        if data['session_key'] != session[user_id]:
+            response = jsonify()
+            response.status_code = 400
+
+        else:
+            response = jsonify()
+
+    except KeyError:
+        response = jsonify()
+        response.status_code = 400
     return response
