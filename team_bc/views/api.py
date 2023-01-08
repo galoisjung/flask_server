@@ -67,8 +67,8 @@ def userLogin():
 @bp.route('/register', methods=['POST'])
 def register():
     # --------------------------------- data 들어오는 것인지 or id, pw, email 하나하나 만들어 주어야 하는 것인지
-    data = request.get_json()
-
+    data = request.get_json()['data']
+    print(data)
     id = data['id'].strip()
     password = data['pw'].strip()
     email = data['email'].strip()
