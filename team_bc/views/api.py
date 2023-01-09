@@ -42,6 +42,7 @@ from psycopg2.errors import UniqueViolation
 # 1. register -> post, login -> post
 bp = Blueprint('api', __name__, url_prefix='/api/phishing/')
 
+
 @bp.route('/login', methods=['POST'])
 def userLogin():
     data = request.get_json()
@@ -52,7 +53,6 @@ def userLogin():
     if user_id != "" and password != "":
         if info and info.password == password:
             session[user_id] = user_id
-            print(session)
             return jsonify({"session_key": user_id})
         else:
             responce = jsonify({"error": "error"})
@@ -68,7 +68,7 @@ def userLogin():
 def register():
     # --------------------------------- data 들어오는 것인지 or id, pw, email 하나하나 만들어 주어야 하는 것인지
     data = request.get_json()['data']
-    print(data)
+    print(type(data))
     id = data['id'].strip()
     password = data['pw'].strip()
     email = data['email'].strip()
@@ -126,6 +126,7 @@ def get_counts():
 def check():
     data = request.get_json()
     user_id = data['user_id']
+    print(session)
     try:
         if data['session_key'] != session[user_id]:
             response = jsonify()
