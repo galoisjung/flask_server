@@ -49,8 +49,7 @@ def userLogin():
     info = Information.query.get(user_id)
     if user_id != "" and password != "":
         if info and info.password == password:
-            # session.clear()
-            # session[user_id] = user_id
+            session[user_id] = user_id
             print(session)
             return jsonify({"session_key": user_id})
         else:
@@ -71,6 +70,7 @@ def register():
     password = data['pw'].strip()
     email = data['email'].strip()
     name = data['name'].strip()
+    print(session)
     # -------------------------------------------- (1) response (원래 만들었던 server.py 참고하여 작성...?) -> (2) UI 작성
     # ---------------------------------- DataBase 와 연결
     try:
@@ -124,7 +124,6 @@ def get_counts():
 def check():
     data = request.get_json()
     user_id = data['user_id']
-    print(session)
     try:
         if data['session_key'] != session[user_id]:
             response = jsonify()
